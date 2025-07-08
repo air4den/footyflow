@@ -14,7 +14,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Users {
   id          String @id @map("_id")
   username    String
   firstname   String
@@ -23,7 +23,7 @@ model User {
   heatmaps    Heatmap[]
 }
 
-model Heatmap {
+model Heatmaps {
   id                String @id @default(auto()) @map("_id") @db.ObjectId
   userId            String
   stravaActivityId  String

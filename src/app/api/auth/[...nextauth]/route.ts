@@ -13,6 +13,12 @@ interface StravaToken extends JWT {
     error?: string
 }
 
+function normalizeStravaAvatar(raw?: string | null) {
+  // Strava’s “no-photo” placeholder is always a short relative path
+  if (!raw || !raw.startsWith("http")) return "/pfp.svg";
+  return raw;                          // real custom avatar URL
+}
+
 async function refreshAccessTooken(token: StravaToken): Promise<StravaToken> {
     try {
         const url = `https://www.strava.com/oauth/token?`
@@ -58,56 +64,51 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, account, profile }) {
             console.log("JWT callback. Token:", token, "Account:", account, "Profile:", profile);
             if (account) {
-                console.log("Account exists in JWT callback.");
+                // console.log("Account exists in JWT callback.");
                 token.access_token = String(account.access_token)
                 token.refresh_token = String(account.refresh_token);
                 token.expires_at = Number(account.expires_at) * 1000; // ms
                 token.id = String(account.athlete.id);
+                token.picture = normalizeStravaAvatar(account.athlete.profile as string);
+                console.log("Picture URL set to:", token.picture);
 
                 if (profile) {
-                console.log("Profile exists in JWT callback.");
-                const strava_id = String(profile.id ?? null);
-                const username = profile?.username ?? null;
-                const firstname = profile?.firstname ?? null;
-                const lastname = profile?.lastname ?? null;
-                const profilepic = profile?.profile ?? null;
+                    // console.log("Profile exists in JWT callback.");
+                    const strava_id = String(profile.id ?? null);
+                    const username = profile?.username ?? null;
+                    const firstname = profile?.firstname ?? null;
+                    const lastname = profile?.lastname ?? null;
+                    const profilepic = profile?.profile ?? null;
 
-                console.log("Profile:", profile);
-
-                // TODO: put in separapte function, handle insert errors
-                const existingUser = await prisma.user.findUnique({
-                    where: { id: strava_id }
-                });
-                if (!existingUser) {
-                    await prisma.user.create({
-                        data: {
-                            id: strava_id,
-                            username: username,
-                            firstname: firstname,
-                            lastname: lastname,
-                            profilepic: profilepic,
-                            heatmaps: {}
-                        }
+                    // TODO: put in separapte function, handle insert errors
+                    const existingUser = await prisma.user.findUnique({
+                        where: { id: strava_id }
                     });
-                    console.log("Created new user in DB with id:", strava_id, "firstname:", firstname, "lastname:", lastname, "username:", username);
+                    if (!existingUser) {
+                        await prisma.user.create({
+                            data: {
+                                id: strava_id,
+                                username: username,
+                                firstname: firstname,
+                                lastname: lastname,
+                                profilepic: profilepic,
+                                heatmaps: {}
+                            }
+                        });
+                        console.log("Created new user in DB with id:", strava_id, "firstname:", firstname, "lastname:", lastname, "username:", username);
+                    }
                 }
-                }
-
                 return token;
             }
-
-            
-
             if (typeof token.expires_at === "number" && Date.now() < token.expires_at) {
                 return token;
             }
-
             return await refreshAccessTooken(token as StravaToken);
         },
         async session({ session, token }) : Promise<Session> {
             session.user.access_token = token.access_token!;
-            session.user.refresh_token = token.refresh_token!;
             session.user.expires_at = token.expires_at!;
+            session.user.id = token.id!;
             console.log("Session callback. Session data:", session);
             return session;
         },

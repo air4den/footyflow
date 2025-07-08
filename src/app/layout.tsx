@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
 import NavMenu from "./components/NavMenu";
 export const metadata: Metadata = {
-  title: "Footyflow",
+  title: "FootyFlow",
   description: "Convert Strava activities into football heatmaps. ",
 };
 
@@ -20,9 +19,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SessionProvider session={session}>
-          <main>
+        <SessionProvider session={session}>  
+          <header className="sticky top-0 z-50">
             <NavMenu />
+          </header>
+          <main className="relative">
             {children}
           </main>
         </SessionProvider>
