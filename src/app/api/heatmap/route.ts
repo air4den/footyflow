@@ -13,7 +13,7 @@ export async function POST(request: Request)
 
     const { stravaActivityId, transform, coords, image } = await request.json();
 
-    const hm = await prisma.heatmaps.create({
+    const hm = await prisma.heatmap.create({
     data: {
       ownerId: session.user.id,
       stravaActivityId: stravaActivityId,
