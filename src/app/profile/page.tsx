@@ -10,10 +10,10 @@ export default async function ProtectedRoute() {
     }
 
     return (
-        <section>
+        <>
             <div> 
                 My profile [protected]
             </div>
-        </section>
+        </>
     )
 }

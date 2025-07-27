@@ -4,6 +4,7 @@ import "./globals.css";
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
 import NavMenu from "./components/NavMenu";
+import { authOptions } from "./api/auth/[...nextauth]/route";
 export const metadata: Metadata = {
   title: "FootyFlow",
   description: "Convert Strava activities into football heatmaps. ",
@@ -11,10 +12,10 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const session = await getServerSession();
+}) {
+  const session = await getServerSession(authOptions);
 
   return (
     <html lang="en">
