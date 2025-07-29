@@ -6,7 +6,7 @@ import SessionProvider from "@/components/SessionProvider";
 import NavMenu from "@/components/NavMenu";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 export const metadata: Metadata = {
-  title: "FootyFlow",
+  title: "JogaFlo",
   description: "Convert Strava activities into football heatmaps. ",
 };
 

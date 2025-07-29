@@ -9,7 +9,7 @@ export default function NavMenu() {
         <nav className="w-full bg-white px-8 py-2  border-b-3 border-gray-100 flex items-center">
             <div className="flex items-center w-full">
                 <Link href="/">
-                    <span className="text-4xl font-bold text-strorange hover:text-orange-700 hover:text-opacity-80">FootyFlow</span>
+                    <span className="text-4xl font-bold text-strorange hover:text-orange-700 hover:text-opacity-80">JogaFlo</span>
                 </Link>
                 <div className="flex-1"></div>
                 <AuthButton />

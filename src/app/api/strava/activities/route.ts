@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 export async function GET() 
 {
   const session = await getServerSession(authOptions) as any;
-  console.log("API Route /api/strava/activities - Session:", session);
+  // console.log("API Route /api/strava/activities - Session:", session);
 
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
@@ -25,11 +25,15 @@ export async function GET()
     return NextResponse.json({ error: "Access token not found" }, { status: 401 });
   }
 
-  const res = await fetch(
-    `https://www.strava.com/api/v3/athlete/activities`,
-    { headers: { Authorization: `Bearer ${account.access_token}` } }
-  );
-  console.log("Strava Activities API response status:", res);
-  const activities = await res.json();
-  return NextResponse.json(activities);
+  try {
+    const res = await fetch(
+      `https://www.strava.com/api/v3/athlete/activities`,
+      { headers: { Authorization: `Bearer ${account.access_token}` } }
+    );
+    const activities = await res.json();
+    return NextResponse.json(activities);
+  } catch (error) {
+    console.error("Error fetching activities:", error);
+    return NextResponse.json({ error: "Failed to fetch activities" }, { status: 500 });
+  }
 }

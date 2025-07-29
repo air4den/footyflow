@@ -25,20 +25,20 @@ export async function GET(_: Request, context: { params: { id: string } })
   if (!account || !account.access_token) {
     return NextResponse.json({ error: "Access token not found" }, { status: 401 });
   }
-  
+  // TODO add error handling logic from API call
   const r = await fetch(
     `https://www.strava.com/api/v3/activities/${params.id}?include_all_efforts=false`,
     { headers: { Authorization: `Bearer ${account.access_token}` } }
   );
   const activity = await r.json();
-  console.log("Strava activity map from Strava API call:", activity.map);
 
   // just send the summary + the decoded lat/lng list
   const polyline = activity.map.polyline ?? activity.polyline ?? "";
+  const decodedCoords = decode(polyline, 6).map(([lat, lng]) => [lat * 10, lng * 10]);
   return NextResponse.json({
     id: activity.id,
     name: activity.name,
     distance: activity.distance,
-    coords: decode(polyline, 6),
+    coords: decodedCoords,
   });
 }

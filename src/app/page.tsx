@@ -6,7 +6,7 @@ export default function Home() {
     <section className="w-full px-4" >
       <div className="my-4 relative flex flex-col items-center justify-center gap-6 h-[75vh] bg-[url('/espanyol_gol_wide.jpg')] bg-cover bg-bottom rounded-2xl overflow-hidden">
         <h1 className="py-0 text-[10vw] font-extrabold text-white m-0 leading-none">
-            FootyFlow
+          JogaFlo
         </h1>
         <h2 className="text-3xl text-white font-bold">
           Turn your activities into football heatmaps.

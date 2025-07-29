@@ -5,7 +5,7 @@ import  Image  from "next/image";
 
 export default function AuthButton() {
     const { data:session, status } = useSession();
-    console.log("AuthButton session status:", status);
+    // console.log("AuthButton session status:", status);
     return (
         <>
             {session ? (
