@@ -14,7 +14,6 @@ export default function LeafletMap() {
     const tileLayerRef = useRef<L.TileLayer | null>(null);
     const fieldMarkersRef = useRef<L.Marker[]>([]);
     const [mapView, setMapView] = useState<{ center: L.LatLng; zoom: number } | null>(null);
-    const isUpdatingHeatmapRef = useRef(false);
 
     // Process coordinates with interpolation
     const processedActivityData = useMemo(() => {
@@ -176,20 +175,23 @@ export default function LeafletMap() {
         }
     }, [tileType]);
 
-    // Update the heatmap layer when the filtered activity data changes
+    // Update the heatmap layer when the relevant inputs change
     useEffect(() => {
-        if (heatmapLayerRef.current && !isUpdatingHeatmapRef.current) {
-            isUpdatingHeatmapRef.current = true;
-            
+        let active = true;
+
+        // Recalculate processedActivityData and filteredActivityData here
+        const coords: [number, number][] = activityData.map(point => [point.lat, point.lng]);
+        const { activityData: processed } = processCoordinates(coords, interpolationInterval);
+        const filtered = filterPointsInField(processed, fieldCorners, showOverflow);
+
+        if (heatmapLayerRef.current && active) {
             try {
-                if (filteredActivityData.length > 0) {
-                    console.log("Updating heatmap layer with", filteredActivityData.length, "points");
+                if (filtered.length > 0) {
                     heatmapLayerRef.current.setData({
                         max: 1,
-                        data: filteredActivityData.map(point => ({ ...point, value: 1 }))
+                        data: filtered.map(point => ({ ...point, value: 1 }))
                     });
                 } else {
-                    console.log("Clearing heatmap layer - no points to display");
                     heatmapLayerRef.current.setData({
                         max: 1,
                         data: []
@@ -198,46 +200,31 @@ export default function LeafletMap() {
                 heatmapLayerRef.current.cfg.radius = radius;
             } catch (error) {
                 console.error("Error updating heatmap layer:", error);
-                // If there's an error, try to reinitialize the heatmap layer
-                try {
-                    if (mapRef.current && heatmapLayerRef.current) {
-                        mapRef.current.removeLayer(heatmapLayerRef.current);
-                        heatmapLayerRef.current = new HeatmapOverlay({
-                            radius: radius,
-                            maxOpacity: 0.8,
-                            scaleRadius: true,
-                            useLocalExtrema: false,
-                            latField: 'lat',
-                            lngField: 'lng',
-                            valueField: 'value'
-                        }).addTo(mapRef.current);
-                    }
-                } catch (reinitError) {
-                    console.error("Error reinitializing heatmap layer:", reinitError);
-                }
+                // // If there's an error, try to reinitialize the heatmap layer
+                // try {
+                //     if (mapRef.current && heatmapLayerRef.current) {
+                //         mapRef.current.removeLayer(heatmapLayerRef.current);
+                //         heatmapLayerRef.current = new HeatmapOverlay({
+                //             radius: radius,
+                //             maxOpacity: 0.8,
+                //             scaleRadius: true,
+                //             useLocalExtrema: false,
+                //             latField: 'lat',
+                //             lngField: 'lng',
+                //             valueField: 'value'
+                //         }).addTo(mapRef.current);
+                //     }
+                // } catch (reinitError) {
+                //     console.error("Error reinitializing heatmap layer:", reinitError);
+                // }
             } finally {
-                isUpdatingHeatmapRef.current = false;
+                // No need to reset any flags since we only use the active flag
             }
         }
-    }, [filteredActivityData]);
-
-    // Separate debounced effect for radius updates
-    useEffect(() => {
-        if (heatmapLayerRef.current && !isUpdatingHeatmapRef.current) {
-            const timeoutId = setTimeout(() => {
-                isUpdatingHeatmapRef.current = true;
-                try {
-                    heatmapLayerRef.current.cfg.radius = radius;
-                } catch (error) {
-                    console.error("Error updating heatmap radius:", error);
-                } finally {
-                    isUpdatingHeatmapRef.current = false;
-                }
-            }, 50); // 50ms debounce
-
-            return () => clearTimeout(timeoutId);
-        }
-    }, [radius]);
+        return () => {
+            active = false;
+        };
+    }, [activityData, interpolationInterval, fieldCorners ? JSON.stringify(fieldCorners) : "", showOverflow, radius]);
 
     // Don't render the map div until center is updated
     if (!center) {
