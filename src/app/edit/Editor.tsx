@@ -91,7 +91,7 @@ export default function Editor() {
                 <div className="grid grid-cols-[140px_200px_60px] gap-4 w-full items-center">
                     <h1 className="text-1xl text-strorange font-bold text-right">Heatmap Radius</h1>
                     <div className="flex justify-center">
-                        <EditSlider value={radius} setValue={setRadius} min={0} max={0.00002} step={0.000001} defaultValue={0.000125} />
+                        <EditSlider value={radius} setValue={setRadius} min={0.000001} max={0.00002} step={0.000001} defaultValue={0.000125} />
                     </div>
                     <h1 className="text-1xl text-strorange font-bold text-left">{radius}</h1>
                 </div>
