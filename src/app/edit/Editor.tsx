@@ -9,7 +9,7 @@ import EditSlider from "./EditSlider";
 const LeafletMap = dynamic(() => import('./LeafletMap'), {ssr: false}); 
 
 export default function Editor() {
-    const { rotation, setRotation, radius, setRadius, pitchSize, setPitchSize, pitchX, setPitchX, pitchY, setPitchY, tileType, setTileType, interpolationInterval, setInterpolationInterval, showOverflow, setShowOverflow } = useHeatmapStore();
+    const { rotation, setRotation, radius, setRadius, pitchSize, setPitchSize, pitchX, setPitchX, pitchY, setPitchY, tileType, setTileType, interpolationInterval, setInterpolationInterval, showOverflow, setShowOverflow, showFieldOverlay, setShowFieldOverlay } = useHeatmapStore();
 
     return (
         <div className="flex flex-row items-center justify-center gap-4 w-full">
@@ -26,7 +26,6 @@ export default function Editor() {
                 </div>
                 
                 <div className="flex items-center justify-center gap-4 w-full">
-                    <h1 className="text-1xl text-strorange font-bold">Show Overflow</h1>
                     <button
                         onClick={() => setShowOverflow(!showOverflow)}
                         className={`px-4 py-2 rounded-md font-medium transition-colors ${
@@ -36,6 +35,16 @@ export default function Editor() {
                         }`}
                     >
                         {showOverflow ? 'Hide Overflow' : 'Show Overflow'}
+                    </button>
+                    <button
+                        onClick={() => setShowFieldOverlay(!showFieldOverlay)}
+                        className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                            showFieldOverlay 
+                                ? 'bg-strorange text-white hover:bg-orange-700' 
+                                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                        }`}
+                    >
+                        {showFieldOverlay ? 'Hide Field' : 'Show Field'}
                     </button>
                 </div>
                 

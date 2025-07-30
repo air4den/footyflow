@@ -5,10 +5,10 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import HeatmapOverlay from "heatmap.js/plugins/leaflet-heatmap";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
-import { processCoordinates, calculateFieldCornersFromMap } from "@/lib/coordinates";
+import { processCoordinates, calculateFieldCornersFromMap, filterPointsInField } from "@/lib/coordinates";
 
 export default function LeafletMap() {
-    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, fieldBoundary, setFieldBoundary } = useHeatmapStore();
+    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, showFieldOverlay, fieldBoundary, setFieldBoundary } = useHeatmapStore();
     const mapRef = useRef<L.Map | null>(null);
     const heatmapLayerRef = useRef<any>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
@@ -45,6 +45,11 @@ export default function LeafletMap() {
             return null;
         }
     }, [pitchSize, pitchX, pitchY, rotation, mapView]); // Added mapView to dependencies
+
+    // Filter activity data based on field boundaries and overflow setting
+    const filteredActivityData = useMemo(() => {
+        return filterPointsInField(processedActivityData, fieldCorners, showOverflow);
+    }, [processedActivityData, fieldCorners, showOverflow]);
 
     // Update field boundary in store
     useEffect(() => {
@@ -172,15 +177,23 @@ export default function LeafletMap() {
 
     // Update the heatmap layer when the processed activity data changes
     useEffect(() => {
-        if (heatmapLayerRef.current && processedActivityData.length > 0) {
-            console.log("Updating heatmap layer with", processedActivityData.length, "points");
-            heatmapLayerRef.current.setData({
-                max: 1,
-                data: processedActivityData.map(point => ({ ...point, value: 1 }))
-            });
+        if (heatmapLayerRef.current) {
+            if (filteredActivityData.length > 0) {
+                console.log("Updating heatmap layer with", filteredActivityData.length, "points");
+                heatmapLayerRef.current.setData({
+                    max: 1,
+                    data: filteredActivityData.map(point => ({ ...point, value: 1 }))
+                });
+            } else {
+                console.log("Clearing heatmap layer - no points to display");
+                heatmapLayerRef.current.setData({
+                    max: 1,
+                    data: []
+                });
+            }
             heatmapLayerRef.current.cfg.radius = radius;
         }
-    }, [radius, processedActivityData]);
+    }, [radius, filteredActivityData]);
 
     // Debug field corners calculation
     useEffect(() => {
@@ -200,51 +213,53 @@ export default function LeafletMap() {
     return (
         <div style={{ position: "relative", height: "600px", width: "70%", overflow: "hidden" }}>
             <div id="map" style={{ height: "100%", width: "100%" }}></div>
-            <div 
-                style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: `translate(calc(-50% + ${pitchX}px), calc(-50% - ${pitchY}px)) rotate(${rotation}deg)`,
-                    width: `${pitchSize * 0.67}px`, // Maintain aspect ratio (74/111 ≈ 0.67)
-                    height: `${pitchSize}px`,
-                    pointerEvents: "none",
-                    zIndex: 1000,
-                    overflow: "visible"
-                }}
-            >
-                <svg 
-                    width="100%" 
-                    height="100%" 
-                    viewBox="0 0 74 111"
-                    preserveAspectRatio="xMidYMid meet"
-                    style={{ 
-                        filter: "drop-shadow(0 0 2px rgba(0,0,0,0.25))",
-                        display: "block"
+            {showFieldOverlay && (
+                <div 
+                    style={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: `translate(calc(-50% + ${pitchX}px), calc(-50% - ${pitchY}px)) rotate(${rotation}deg)`,
+                        width: `${pitchSize * 0.67}px`,
+                        height: `${pitchSize}px`,
+                        pointerEvents: "none",
+                        zIndex: 1000,
+                        overflow: "visible"
                     }}
                 >
-                    <rect width="74" height="111" fill="none" />
-                    <g fill="none" stroke="#fff" strokeWidth="0.5" transform="translate(3 3)">
-                        <path d="M 0 0 h 68 v 105 h -68 Z"/>
-                        <path d="M 0 52.5 h 68"/>
-                        <circle r="9.15" cx="34" cy="52.5"/>
-                        <circle r="0.75" cx="34" cy="52.5" fill="#fff" stroke="none"/>
-                        <g>
-                            <path d="M 13.84 0 v 16.5 h 40.32 v -16.5"/>
-                            <path d="M 24.84 0 v 5.5 h 18.32 v -5.5"/>
-                            <circle r="0.75" cx="34" cy="10.94" fill="#fff" stroke="none"/>
-                            <path d="M 26.733027 16.5 a 9.15 9.15 0 0 0 14.533946 0"/>
+                    <svg 
+                        width="100%" 
+                        height="100%" 
+                        viewBox="0 0 74 111"
+                        preserveAspectRatio="xMidYMid meet"
+                        style={{ 
+                            filter: "drop-shadow(0 0 2px rgba(0,0,0,0.25))",
+                            display: "block"
+                        }}
+                    >
+                        <rect width="74" height="111" fill="none" />
+                        <g fill="none" stroke="#fff" strokeWidth="0.5" transform="translate(3 3)">
+                            <path d="M 0 0 h 68 v 105 h -68 Z"/>
+                            <path d="M 0 52.5 h 68"/>
+                            <circle r="9.15" cx="34" cy="52.5"/>
+                            <circle r="0.75" cx="34" cy="52.5" fill="#fff" stroke="none"/>
+                            <g>
+                                <path d="M 13.84 0 v 16.5 h 40.32 v -16.5"/>
+                                <path d="M 24.84 0 v 5.5 h 18.32 v -5.5"/>
+                                <circle r="0.75" cx="34" cy="10.94" fill="#fff" stroke="none"/>
+                                <path d="M 26.733027 16.5 a 9.15 9.15 0 0 0 14.533946 0"/>
+                            </g>
+                            <g transform="rotate(180,34,52.5)">
+                                <path d="M 13.84 0 v 16.5 h 40.32 v -16.5"/>
+                                <path d="M 24.84 0 v 5.5 h 18.32 v -5.5"/>
+                                <circle r="0.75" cx="34" cy="10.94" fill="#fff" stroke="none"/>
+                                <path d="M 26.733027 16.5 a 9.15 9.15 0 0 0 14.533946 0"/>
+                            </g>
+                            <path d="M 0 2 a 2 2 0 0 0 2 -2M 66 0 a 2 2 0 0 0 2 2M 68 103 a 2 2 0 0 0 -2 2M 2 105 a 2 2 0 0 0 -2 -2"/>
                         </g>
-                        <g transform="rotate(180,34,52.5)">
-                            <path d="M 13.84 0 v 16.5 h 40.32 v -16.5"/>
-                            <path d="M 24.84 0 v 5.5 h 18.32 v -5.5"/>
-                            <circle r="0.75" cx="34" cy="10.94" fill="#fff" stroke="none"/>
-                            <path d="M 26.733027 16.5 a 9.15 9.15 0 0 0 14.533946 0"/>
-                        </g>
-                        <path d="M 0 2 a 2 2 0 0 0 2 -2M 66 0 a 2 2 0 0 0 2 2M 68 103 a 2 2 0 0 0 -2 2M 2 105 a 2 2 0 0 0 -2 -2"/>
-                    </g>
-                </svg>
-            </div>
+                    </svg>
+                </div>
+            )}
         </div>
     );
 }

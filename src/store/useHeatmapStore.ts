@@ -29,6 +29,9 @@ interface HeatmapStore {
     showOverflow: boolean;
     setShowOverflow: (show: boolean) => void;
 
+    showFieldOverlay: boolean;
+    setShowFieldOverlay: (show: boolean) => void;
+
     fieldBoundary: { lat: number; lng: number }[] | null;
     setFieldBoundary: (boundary: { lat: number; lng: number }[] | null) => void;
 
@@ -66,6 +69,7 @@ export const useHeatmapStore = create<HeatmapStore>()(
             tileType: 'osm',
             interpolationInterval: 1.5,
             showOverflow: false,
+            showFieldOverlay: false,
             fieldBoundary: null,
             activityData: [],
             center: null,
@@ -78,6 +82,7 @@ export const useHeatmapStore = create<HeatmapStore>()(
             setTileType: (tileType: 'osm' | 'satellite') => set({ tileType }),
             setInterpolationInterval: (interval: number) => set({ interpolationInterval: interval }),
             setShowOverflow: (show: boolean) => set({ showOverflow: show }),
+            setShowFieldOverlay: (show: boolean) => set({ showFieldOverlay: show }),
             setFieldBoundary: (boundary: { lat: number; lng: number }[] | null) => set({ fieldBoundary: boundary }),
             setActivityData: (data: any[]) => set({ activityData: data }),
             setCenter: (center: { lat: number, lon: number } | null) => set({ center }),

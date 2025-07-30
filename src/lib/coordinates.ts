@@ -162,3 +162,40 @@ export function calculateFieldCornersFromMap(
     console.log("Final corner coordinates:", corners);
     return corners;
 } 
+
+// Function to check if a point is inside a polygon (field boundaries)
+export function isPointInPolygon(
+    point: { lat: number; lng: number },
+    polygon: { lat: number; lng: number }[]
+): boolean {
+    const { lat, lng } = point;
+    let inside = false;
+    
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].lng;
+        const yi = polygon[i].lat;
+        const xj = polygon[j].lng;
+        const yj = polygon[j].lat;
+        
+        if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+            inside = !inside;
+        }
+    }
+    
+    return inside;
+}
+
+// Function to filter activity data to only include points within field boundaries
+export function filterPointsInField(
+    activityData: { lat: number; lng: number }[],
+    fieldCorners: { lat: number; lng: number }[] | null,
+    showOverflow: boolean
+): { lat: number; lng: number }[] {
+    if (showOverflow || !fieldCorners || fieldCorners.length < 3) {
+        return activityData; // Show all points if overflow is enabled or no valid field
+    }
+    
+    return activityData.filter(point => 
+        isPointInPolygon(point, fieldCorners)
+    );
+} 
