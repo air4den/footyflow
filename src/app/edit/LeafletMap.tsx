@@ -1,23 +1,125 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import HeatmapOverlay from "heatmap.js/plugins/leaflet-heatmap";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
+import { processCoordinates, calculateFieldCornersFromMap } from "@/lib/coordinates";
 
 export default function LeafletMap() {
-    const { radius, rotation, activityData, center } = useHeatmapStore();
+    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, fieldBoundary, setFieldBoundary } = useHeatmapStore();
     const mapRef = useRef<L.Map | null>(null);
     const heatmapLayerRef = useRef<any>(null);
-    const pitchOverlayRef = useRef<HTMLDivElement | null>(null);
+    const tileLayerRef = useRef<L.TileLayer | null>(null);
+    const fieldMarkersRef = useRef<L.Marker[]>([]);
+    const [mapView, setMapView] = useState<{ center: L.LatLng; zoom: number } | null>(null);
+
+    // Process coordinates with interpolation
+    const processedActivityData = useMemo(() => {
+        if (activityData.length === 0) return [];
+        
+        // Convert activityData to coordinates format for processing
+        const coords: [number, number][] = activityData.map(point => [point.lat, point.lng]);
+        const result = processCoordinates(coords, interpolationInterval);
+        return result.activityData;
+    }, [activityData, interpolationInterval]);
+
+    // Calculate field corners using the map's container point conversion
+    const fieldCorners = useMemo(() => {
+        if (!mapRef.current) {
+            console.log("Map not ready yet");
+            return null;
+        }
+        
+        console.log("Calculating field corners with map:", mapRef.current);
+        console.log("Field settings:", { pitchSize, pitchX, pitchY, rotation });
+        console.log("Map view:", mapView);
+        
+        try {
+            const corners = calculateFieldCornersFromMap(mapRef.current, pitchSize, pitchX, pitchY, rotation);
+            console.log("Calculated corners:", corners);
+            return corners;
+        } catch (error) {
+            console.error("Error calculating field corners:", error);
+            return null;
+        }
+    }, [pitchSize, pitchX, pitchY, rotation, mapView]); // Added mapView to dependencies
+
+    // Update field boundary in store
+    useEffect(() => {
+        if (fieldCorners) {
+            setFieldBoundary(fieldCorners);
+        }
+    }, [fieldCorners, setFieldBoundary]);
+
+    // Update field corner markers
+    useEffect(() => {
+        if (!mapRef.current || !fieldCorners) return;
+
+        // Remove existing markers
+        fieldMarkersRef.current.forEach(marker => {
+            mapRef.current?.removeLayer(marker);
+        });
+        fieldMarkersRef.current = [];
+
+        // Add new markers for each corner
+        fieldCorners.forEach((corner, index) => {
+            const marker = L.marker([corner.lat, corner.lng], {
+                icon: L.divIcon({
+                    className: 'field-corner-marker',
+                    html: `<div style="background: red; width: 8px; height: 8px; border-radius: 50%; border: 1px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.7);"></div>`,
+                    iconSize: [8, 8],
+                    iconAnchor: [4, 4]
+                }),
+                zIndexOffset: 2000
+            }).addTo(mapRef.current!);
+            
+            fieldMarkersRef.current.push(marker);
+        });
+
+        console.log("Field corners:", fieldCorners);
+    }, [fieldCorners]);
+
+    // Track map view changes
+    useEffect(() => {
+        if (!mapRef.current) return;
+
+        const updateMapView = () => {
+            const center = mapRef.current!.getCenter();
+            const zoom = mapRef.current!.getZoom();
+            setMapView({ center, zoom });
+        };
+
+        // Update view initially
+        updateMapView();
+
+        // Listen for map view changes
+        mapRef.current.on('moveend', updateMapView);
+        mapRef.current.on('zoomend', updateMapView);
+        mapRef.current.on('move', updateMapView); // Real-time updates
+
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.off('moveend', updateMapView);
+                mapRef.current.off('zoomend', updateMapView);
+                mapRef.current.off('move', updateMapView);
+            }
+        };
+    }, [mapRef.current]);
 
     useEffect(() => {
         // Initialize the map only when center is available
         if (!mapRef.current && center) {
             console.log("Initializing map with center:", center);
-            mapRef.current = L.map('map').setView([center.lat, center.lon], 18);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            mapRef.current = L.map('map').setView([center.lat, center.lon], 19);
+            
+            // Add initial tile layer
+            const tileUrl = tileType === 'satellite' 
+                ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            
+            tileLayerRef.current = L.tileLayer(tileUrl, {
                 maxZoom: 22,
             }).addTo(mapRef.current);
 
@@ -30,6 +132,17 @@ export default function LeafletMap() {
                 lngField: 'lng',
                 valueField: 'value'
             }).addTo(mapRef.current);
+
+            // Test the container point conversion
+            setTimeout(() => {
+                if (mapRef.current) {
+                    const containerCenter = mapRef.current.getContainer();
+                    const centerX = containerCenter.offsetWidth / 2;
+                    const centerY = containerCenter.offsetHeight / 2;
+                    const testLatLng = mapRef.current.containerPointToLatLng([centerX, centerY]);
+                    console.log("Test conversion - center pixel to lat/lng:", { centerX, centerY, testLatLng });
+                }
+            }, 1000);
         }
 
         return () => {
@@ -40,24 +153,42 @@ export default function LeafletMap() {
         };
     }, [center]);
 
-    // Update the heatmap layer when the activity data changes
+    // Update tile layer when tileType changes
     useEffect(() => {
-        if (heatmapLayerRef.current && activityData.length > 0) {
-            console.log("Updating heatmap layer");
+        if (mapRef.current && tileLayerRef.current) {
+            // Remove current tile layer
+            mapRef.current.removeLayer(tileLayerRef.current);
+            
+            // Add new tile layer
+            const tileUrl = tileType === 'satellite' 
+                ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            
+            tileLayerRef.current = L.tileLayer(tileUrl, {
+                maxZoom: 22,
+            }).addTo(mapRef.current);
+        }
+    }, [tileType]);
+
+    // Update the heatmap layer when the processed activity data changes
+    useEffect(() => {
+        if (heatmapLayerRef.current && processedActivityData.length > 0) {
+            console.log("Updating heatmap layer with", processedActivityData.length, "points");
             heatmapLayerRef.current.setData({
                 max: 1,
-                data: activityData.map(point => ({ ...point, value: 1 }))
+                data: processedActivityData.map(point => ({ ...point, value: 1 }))
             });
             heatmapLayerRef.current.cfg.radius = radius;
         }
-    }, [radius, activityData]);
+    }, [radius, processedActivityData]);
 
-    // Update pitch rotation
+    // Debug field corners calculation
     useEffect(() => {
-        if (pitchOverlayRef.current) {
-            pitchOverlayRef.current.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+        if (fieldCorners) {
+            console.log("Field corners recalculated:", fieldCorners);
+            console.log("Field settings:", { pitchSize, pitchX, pitchY, rotation });
         }
-    }, [rotation]);
+    }, [fieldCorners, pitchSize, pitchX, pitchY, rotation]);
 
     // Don't render the map div until center is updated
     if (!center) {
@@ -67,26 +198,30 @@ export default function LeafletMap() {
     }
 
     return (
-        <div style={{ position: "relative", height: "600px", width: "70%" }}>
+        <div style={{ position: "relative", height: "600px", width: "70%", overflow: "hidden" }}>
             <div id="map" style={{ height: "100%", width: "100%" }}></div>
             <div 
-                ref={pitchOverlayRef}
                 style={{
                     position: "absolute",
                     top: "50%",
                     left: "50%",
-                    transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
-                    width: "auto",
-                    height: "500px",
+                    transform: `translate(calc(-50% + ${pitchX}px), calc(-50% - ${pitchY}px)) rotate(${rotation}deg)`,
+                    width: `${pitchSize * 0.67}px`, // Maintain aspect ratio (74/111 ≈ 0.67)
+                    height: `${pitchSize}px`,
                     pointerEvents: "none",
-                    zIndex: 1000
+                    zIndex: 1000,
+                    overflow: "visible"
                 }}
             >
                 <svg 
                     width="100%" 
                     height="100%" 
                     viewBox="0 0 74 111"
-                    style={{ filter: "drop-shadow(0 0 2px rgba(0,0,0,0.25))" }}
+                    preserveAspectRatio="xMidYMid meet"
+                    style={{ 
+                        filter: "drop-shadow(0 0 2px rgba(0,0,0,0.25))",
+                        display: "block"
+                    }}
                 >
                     <rect width="74" height="111" fill="none" />
                     <g fill="none" stroke="#fff" strokeWidth="0.5" transform="translate(3 3)">

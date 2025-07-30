@@ -19,19 +19,19 @@ export default function EditPage() {
         if (!selectedActivityId) {
             redirect('/create');
         }
+
         console.log("useEffect triggered with selectedActivityId:", selectedActivityId);
         fetch(`/api/strava/activity/${selectedActivityId}`)
         .then((r) => r.json())
         .then(({ coords }) => {
-            const pts = coords.map((c: [number, number]) => ({ lat: c[0], lng: c[1] }));
-            setActivityData(pts);
-            console.log("Activity Data: ", pts);
+            // Convert coordinates to activity data format
+            const activityData = coords.map(([lat, lng]: [number, number]) => ({ lat, lng }));
+            setActivityData(activityData);
+            console.log("Activity data set:", activityData.length, "points");
 
-            // Calculate the average latitude and longitude
-            const avgLat = pts.reduce((sum: number, point: { lat: number; lng: number }) => sum + point.lat, 0) / pts.length;
-            const avgLng = pts.reduce((sum: number, point: { lat: number; lng: number }) => sum + point.lng, 0) / pts.length;
-
-            // Update the center in the heatmap store
+            // Calculate initial center from coordinates
+            const avgLat = coords.reduce((sum: number, [lat]: [number, number]) => sum + lat, 0) / coords.length;
+            const avgLng = coords.reduce((sum: number, [, lng]: [number, number]) => sum + lng, 0) / coords.length;
             setCenter({ lat: avgLat, lon: avgLng });
         })
         .catch(console.error);
@@ -47,17 +47,17 @@ export default function EditPage() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center gap-4 mt-16">
+        <>
+        <div className="flex flex-col items-center justify-center gap-8 m-12">
             <h1 className="text-3xl text-strorange font-bold">Edit Heatmap</h1>
-            <div className="flex flex-col items-center justify-center gap-4 w-full">
-                <Button
-                    className="absolute top-0 left-8 px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
-                    onClick={() => handleBack()}
-                >
-                    Back
-                </Button>
-            </div>
             <Editor />
         </div>
+        <Button
+            className="absolute top-0 left-8 px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
+            onClick={() => handleBack()}
+        >
+            Back
+        </Button>
+        </>
     )
 }
