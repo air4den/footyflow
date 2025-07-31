@@ -45,6 +45,7 @@ export default function Editor() {
                     <button
                         onClick={() => setTileType(tileType === 'osm' ? 'satellite' : 'osm')}
                         className="px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 transition-colors"
+                        style={{ cursor: 'pointer' }}
                     >
                         {tileType === 'osm' ? 'Switch to Satellite' : 'Switch to OSM'}
                     </button>
@@ -58,6 +59,7 @@ export default function Editor() {
                                 ? 'bg-strorange text-white hover:bg-orange-700' 
                                 : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                         }`}
+                        style={{ cursor: 'pointer' }}
                     >
                         {showOverflow ? 'Hide Overflow' : 'Show Overflow'}
                     </button>
@@ -68,6 +70,7 @@ export default function Editor() {
                                 ? 'bg-strorange text-white hover:bg-orange-700' 
                                 : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
                         }`}
+                        style={{ cursor: 'pointer' }}
                     >
                         {showFieldOverlay ? 'Hide Field' : 'Show Field'}
                     </button>
@@ -122,6 +125,7 @@ export default function Editor() {
                 </div>
                 <Button
                 className="px-4 py-2 rounded-md bg-gradient-to-br from-strorange to-purple-400 text-white font-medium hover:opacity-80"
+                style={{ cursor: 'pointer' }}
                 onClick={handleCapture}
                 >
                     Capture Heatmap

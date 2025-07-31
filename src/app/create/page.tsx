@@ -36,7 +36,7 @@ export default function CreatePage() {
 
     return (
         <div className="flex flex-col items-center justify-center gap-4 mt-32">
-            <h1 className="text-3xl text-strorange font-bold">Create Heatmap</h1>
+            <h1 className="text-4xl text-strorange font-bold">Create Heatmap</h1>
             <div className="flex flex-col items-center justify-center gap-4 px-4">
                 <select 
                     value={tempActivityId || ""} 
@@ -66,6 +66,7 @@ export default function CreatePage() {
                 </select>
                 <Button
                     className="px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
+                    style={{ cursor: 'pointer' }}
                     onClick={() => handleChooseActivity()}
                 >
                     Choose Activity

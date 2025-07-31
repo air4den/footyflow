@@ -13,6 +13,7 @@ export default function Home() {
         </h2>
         <Button 
           className="px-4 py-2 bg-strorange text-3xl text-white font-bold rounded-lg hover:bg-orange-700 hover:bg-opacity-80"
+          style={{ cursor: 'pointer' }}
           onClick={() => { window.location.href = "/create"; }}
         >
           Create New Heatmap

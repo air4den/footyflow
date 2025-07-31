@@ -1,9 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import StravaProvider from "next-auth/providers/strava";
-import { PrismaClient } from "@/generated/prisma"
+import { prisma } from "@/lib/prisma";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-
-const prisma = new PrismaClient();
 
 function normalizeStravaAvatar(raw?: string | null) 
 {

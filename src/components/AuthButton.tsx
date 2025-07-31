@@ -22,6 +22,7 @@ export default function AuthButton() {
                         
                         <Button
                             className="px-4 py-2 rounded-md bg-gray-300 text-white font-medium hover:bg-orange-700 hover:opacity-80"
+                            style={{ cursor: 'pointer' }}
                             onClick={() => signOut({ callbackUrl: "/" })}
                         >
                             Sign Out
@@ -32,6 +33,7 @@ export default function AuthButton() {
                 <>
                 <Button
                     className="px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
+                    style={{ cursor: 'pointer' }}
                     onClick={() => signIn()}
                 >
                     Sign In

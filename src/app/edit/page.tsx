@@ -55,6 +55,7 @@ export default function EditPage() {
             </div>
             <Button
                 className="absolute top-0 left-4 px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
+                style={{ cursor: 'pointer' }}
                 onClick={() => handleBack()}
             >
                 Back
