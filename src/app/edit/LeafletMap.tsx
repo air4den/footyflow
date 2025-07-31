@@ -1,19 +1,93 @@
 "use client";
 
-import { useEffect, useRef, useMemo, useState } from "react";
+import { useEffect, useRef, useMemo, useState, forwardRef, useImperativeHandle } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import HeatmapOverlay from "heatmap.js/plugins/leaflet-heatmap";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import { processCoordinates, calculateFieldCornersFromMap, filterPointsInField } from "@/lib/coordinates";
 
-export default function LeafletMap() {
+export interface LeafletMapRef {
+    captureHeatmap: () => Promise<string>;
+}
+
+const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
     const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, showFieldOverlay, fieldBoundary, setFieldBoundary } = useHeatmapStore();
     const mapRef = useRef<L.Map | null>(null);
     const heatmapLayerRef = useRef<any>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
-    const fieldMarkersRef = useRef<L.Marker[]>([]);
+    // const logoControlRef = useRef<L.Control | null>(null);
+    const mapContainerRef = useRef<HTMLDivElement>(null);
     const [mapView, setMapView] = useState<{ center: L.LatLng; zoom: number } | null>(null);
+
+    // Expose capture function to parent component
+    useImperativeHandle(ref, () => ({
+        captureHeatmap: async () => {
+            if (!mapContainerRef.current) {
+                throw new Error("Map container not found");
+            }
+
+            // Get the map container dimensions
+            const container = mapContainerRef.current;
+            const { width, height } = container.getBoundingClientRect();
+            
+            // Calculate dimensions for 4:5 aspect ratio
+            const aspectRatio = 4/5; // width:height ratio
+            
+            // Determine the shortest side and calculate the other dimension
+            let captureWidth, captureHeight;
+            if (width < height) {
+                // Width is shorter, use it as the constraint
+                captureWidth = width;
+                captureHeight = width / aspectRatio;
+            } else {
+                // Height is shorter, use it as the constraint
+                captureHeight = height;
+                captureWidth = height * aspectRatio;
+            }
+            
+            // Create a canvas with 4:5 aspect ratio
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = captureWidth;
+            canvas.height = captureHeight;
+
+            if (!ctx) {
+                throw new Error("Could not get canvas context");
+            }
+
+            try {
+                // Dynamically import html2canvas
+                const html2canvas = (await import('html2canvas')).default;
+                
+                // Calculate the center position for capture
+                const captureX = (width - captureWidth) / 2; // Center horizontally
+                const captureY = (height - captureHeight) / 2; // Center vertically
+                
+                // Capture the entire map container including overlays
+                const canvasResult = await html2canvas(container.parentElement!, {
+                    width: width,
+                    height: height,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    scale: 1,
+                    logging: false,
+                    removeContainer: true
+                });
+                
+                // Draw only the centered portion to create the 4:5 aspect ratio
+                ctx.drawImage(canvasResult, captureX, captureY, captureWidth, captureHeight, 0, 0, captureWidth, captureHeight);
+
+                // Convert to data URL
+                const dataUrl = canvas.toDataURL('image/png');
+                return dataUrl;
+            } catch (error) {
+                console.error('Capture error:', error);
+                throw new Error('Failed to capture heatmap');
+            }
+        }
+    }), []);
 
     // Process coordinates with interpolation
     const processedActivityData = useMemo(() => {
@@ -58,34 +132,6 @@ export default function LeafletMap() {
         }
     }, [fieldCorners, setFieldBoundary]);
 
-    // Update field corner markers
-    useEffect(() => {
-        if (!mapRef.current || !fieldCorners) return;
-
-        // Remove existing markers
-        fieldMarkersRef.current.forEach(marker => {
-            mapRef.current?.removeLayer(marker);
-        });
-        fieldMarkersRef.current = [];
-
-        // Add new markers for each corner
-        fieldCorners.forEach((corner, index) => {
-            const marker = L.marker([corner.lat, corner.lng], {
-                icon: L.divIcon({
-                    className: 'field-corner-marker',
-                    html: `<div style="background: red; width: 8px; height: 8px; border-radius: 50%; border: 1px solid white; box-shadow: 0 0 3px rgba(0,0,0,0.7);"></div>`,
-                    iconSize: [8, 8],
-                    iconAnchor: [4, 4]
-                }),
-                zIndexOffset: 2000
-            }).addTo(mapRef.current!);
-            
-            fieldMarkersRef.current.push(marker);
-        });
-
-        console.log("Field corners:", fieldCorners);
-    }, [fieldCorners]);
-
     // Track map view changes
     useEffect(() => {
         if (!mapRef.current) return;
@@ -113,6 +159,7 @@ export default function LeafletMap() {
         };
     }, [mapRef.current]);
 
+    // Initialize Leaflet Map, Heatmap, and Logo
     useEffect(() => {
         // Initialize the map only when center is available
         if (!mapRef.current && center) {
@@ -129,7 +176,7 @@ export default function LeafletMap() {
             }).addTo(mapRef.current);
 
             heatmapLayerRef.current = new HeatmapOverlay({
-                radius: radius,
+        radius: radius,
                 maxOpacity: 0.8,
                 scaleRadius: true,
                 useLocalExtrema: false,
@@ -137,6 +184,29 @@ export default function LeafletMap() {
                 lngField: 'lng',
                 valueField: 'value'
             }).addTo(mapRef.current);
+
+            // Add logo control to bottom right corner
+            // const LogoControl = L.Control.extend({
+            //     onAdd: function() {
+            //         const container = L.DomUtil.create('div', 'leaflet-control-logo');
+            //         container.innerHTML = '<span class="text-4xl font-bold">JogaFlo</span>';
+                    
+            //         // Apply gradient to the span element
+            //         const span = container.querySelector('span');
+            //         if (span) {
+            //             span.style.cssText = `
+                            
+            //                 color: #ea5e2a;
+        
+            //             `;
+            //         }
+                    
+            //         return container;
+            //     }
+            // });
+            
+            // logoControlRef.current = new LogoControl({ position: 'topright' });
+            // logoControlRef.current.addTo(mapRef.current);
 
             // Test the container point conversion
             setTimeout(() => {
@@ -152,6 +222,10 @@ export default function LeafletMap() {
 
         return () => {
             if (mapRef.current) {
+                // if (logoControlRef.current) {
+                //     logoControlRef.current.remove();
+                //     logoControlRef.current = null;
+                // }
                 mapRef.current.remove();
                 mapRef.current = null;
             }
@@ -199,26 +273,8 @@ export default function LeafletMap() {
                 }
                 heatmapLayerRef.current.cfg.radius = radius;
             } catch (error) {
-                console.error("Error updating heatmap layer:", error);
-                // // If there's an error, try to reinitialize the heatmap layer
-                // try {
-                //     if (mapRef.current && heatmapLayerRef.current) {
-                //         mapRef.current.removeLayer(heatmapLayerRef.current);
-                //         heatmapLayerRef.current = new HeatmapOverlay({
-                //             radius: radius,
-                //             maxOpacity: 0.8,
-                //             scaleRadius: true,
-                //             useLocalExtrema: false,
-                //             latField: 'lat',
-                //             lngField: 'lng',
-                //             valueField: 'value'
-                //         }).addTo(mapRef.current);
-                //     }
-                // } catch (reinitError) {
-                //     console.error("Error reinitializing heatmap layer:", reinitError);
-                // }
-            } finally {
-                // No need to reset any flags since we only use the active flag
+                console.error("Error updating heatmap layer:");
+                
             }
         }
         return () => {
@@ -228,14 +284,14 @@ export default function LeafletMap() {
 
     // Don't render the map div until center is updated
     if (!center) {
-        return <div style={{ height: "600px", width: "70%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        return <div style={{ height: "600px", width: "95%", maxWidth: "800px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             Loading map...
         </div>;
     }
 
     return (
-        <div style={{ position: "relative", height: "600px", width: "70%", overflow: "hidden" }}>
-            <div id="map" style={{ height: "100%", width: "100%" }}></div>
+        <div style={{ position: "relative", height: "600px", width: "92%", maxWidth: "800px", overflow: "hidden", zIndex: "0" }}>
+            <div id="map" ref={mapContainerRef} style={{ height: "100%", width: "100%" }}></div>
             {showFieldOverlay && (
                 <div 
                     style={{
@@ -285,4 +341,6 @@ export default function LeafletMap() {
             )}
         </div>
     );
-}
+});
+
+export default LeafletMap;

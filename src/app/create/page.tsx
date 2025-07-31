@@ -35,10 +35,14 @@ export default function CreatePage() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center gap-4 mt-16">
+        <div className="flex flex-col items-center justify-center gap-4 mt-32">
             <h1 className="text-3xl text-strorange font-bold">Create Heatmap</h1>
-            <div className="flex flex-col items-center justify-center gap-4 w-full px-4">
-                <select value={tempActivityId || ""} onChange={(e) => setTempActivityId(e.target.value)}>
+            <div className="flex flex-col items-center justify-center gap-4 px-4">
+                <select 
+                    value={tempActivityId || ""} 
+                    onChange={(e) => setTempActivityId(e.target.value)}
+                    className="w-full max-w-md"
+                >
                     <option value="">Select Activity...</option>
                     {activities.map((activity) => {
                         const date = new Date(activity.start_date_local);

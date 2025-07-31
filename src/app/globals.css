@@ -14,3 +14,21 @@ body {
   color: var(--foreground);
   font-family: Avenir, sans-serif;
 }
+
+.logo-gradient {
+  background: linear-gradient(to bottom right, var(--color-strorange), #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  transition: all 0.2s ease;
+  display: block;
+}
+
+.logo-gradient:hover {
+  background: linear-gradient(to bottom right, var(--color-strorange), #92400e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+}

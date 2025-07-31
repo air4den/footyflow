@@ -44,20 +44,21 @@ export default function EditPage() {
 
     const handleSaveHeatmap = () => {
         // save heatmap as image
+        console.log("Saving heatmap");
     };
 
     return (
         <>
-        <div className="flex flex-col items-center justify-center gap-8 m-12">
-            <h1 className="text-3xl text-strorange font-bold">Edit Heatmap</h1>
-            <Editor />
-        </div>
-        <Button
-            className="absolute top-0 left-8 px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
-            onClick={() => handleBack()}
-        >
-            Back
-        </Button>
+            <div className="flex flex-col items-center justify-center gap-8 mt-28 mb-8">
+                <h1 className="text-3xl text-strorange font-bold">Edit Heatmap</h1>
+                <Editor />
+            </div>
+            <Button
+                className="absolute top-0 left-4 px-4 py-2 rounded-md bg-strorange text-white font-medium hover:bg-orange-700 hover:opacity-80"
+                onClick={() => handleBack()}
+            >
+                Back
+            </Button>
         </>
     )
 }

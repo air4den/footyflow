@@ -14,17 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Heatmap {
-  id                String @id @default(auto()) @map("_id") @db.ObjectId
-  ownerId           String  @db.ObjectId
-  stravaActivityId  String
-  routeCoordinates  Json
-  transform         Json      // { translate: [x,y], scale: s, rotate: deg }
-  createdAt         DateTime  @default(now())
-  imageUrl          String
-  user              User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-}
-
 model User {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
@@ -37,7 +26,6 @@ model User {
   username    String
   firstname   String
   lastname    String
-  heatmaps    Heatmap[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

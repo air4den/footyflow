@@ -108,7 +108,7 @@ export function calculateFieldCornersFromMap(
     
     // Calculate the field center position (accounting for pitchX and pitchY)
     const fieldCenterX = centerX + pitchX;
-    const fieldCenterY = centerY + pitchY;
+    const fieldCenterY = centerY - pitchY; // Invert pitchY to match field overlay transform
     
     console.log("Field center position:", { fieldCenterX, fieldCenterY });
     console.log("Field dimensions:", { fieldWidth, fieldHeight });
