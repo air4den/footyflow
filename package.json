@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "vercel-build": "npx prisma generate && npm run build",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -12,6 +13,7 @@
     "@mapbox/polyline": "^1.2.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@prisma/client": "^6.11.1",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.13.0",
     "@radix-ui/react-slider": "^1.3.5",
     "@radix-ui/themes": "^3.2.1",
     "heatmap.js": "^2.0.5",
