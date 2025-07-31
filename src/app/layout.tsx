@@ -27,6 +27,13 @@ export default async function RootLayout({
           <main className="relative">
             {children}
           </main>
+          <footer className="w-full mt-4" style={{ padding: '2.5rem 0', backgroundColor: '#f5f5f5' }}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-8">
+                <p className="text-sm text-center">
+                  © 2025 JogaFlo. Built with 🧡 by <a href="https://joshforden.com" className="text-strorange hover:text-orange-700 hover:text-opacity-80">Josh Forden</a>.
+                </p>
+            </div>
+          </footer>
         </SessionProvider>
       </body>
     </html>

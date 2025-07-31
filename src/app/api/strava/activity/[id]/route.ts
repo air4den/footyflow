@@ -4,12 +4,14 @@ import { authOptions } from "../../../auth/[...nextauth]/route";
 import { prisma } from "@/lib/prisma";
 import { decode } from "@mapbox/polyline";
 
-export async function GET(request: Request, context: { params: { id: string } }) 
-{
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const session = await getServerSession(authOptions) as any;
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
-  const params = await context.params;
+  const { id } = await params;
 
   const account = await prisma.account.findUnique({
     where: {
@@ -26,7 +28,7 @@ export async function GET(request: Request, context: { params: { id: string } })
   
   // TODO add error handling logic from API call
   const r = await fetch(
-    `https://www.strava.com/api/v3/activities/${params.id}?include_all_efforts=false`,
+    `https://www.strava.com/api/v3/activities/${id}?include_all_efforts=false`,
     { headers: { Authorization: `Bearer ${account.access_token}` } }
   );
   const activity = await r.json();

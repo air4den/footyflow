@@ -35,7 +35,7 @@ export default function CreatePage() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center gap-4 mt-32">
+        <div className="flex flex-col items-center justify-center gap-4 mt-32" style={{ minHeight: 'calc(100vh - 14rem)' }}>
             <h1 className="text-4xl text-strorange font-bold">Create Heatmap</h1>
             <div className="flex flex-col items-center justify-center gap-4 px-4">
                 <select 
