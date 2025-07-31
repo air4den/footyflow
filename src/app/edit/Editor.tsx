@@ -2,8 +2,7 @@
 
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import dynamic from 'next/dynamic';
-import { useState, useEffect, useRef } from 'react';
-import { redirect } from 'next/navigation';
+import { useRef } from 'react';
 import EditSlider from "./EditSlider";
 import { Button } from "@radix-ui/themes";
 import { LeafletMapRef } from "./LeafletMap";

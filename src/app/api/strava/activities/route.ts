@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() 
 {
-  const session = await getServerSession(authOptions) as any;
+  const session = await getServerSession(authOptions) as { user: { id: string } } | null;
   // console.log("API Route /api/strava/activities - Session:", session);
 
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });

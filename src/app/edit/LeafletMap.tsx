@@ -12,9 +12,12 @@ export interface LeafletMapRef {
 }
 
 const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
-    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, showFieldOverlay, fieldBoundary, setFieldBoundary } = useHeatmapStore();
+    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, showFieldOverlay } = useHeatmapStore();
     const mapRef = useRef<L.Map | null>(null);
-    const heatmapLayerRef = useRef<any>(null);
+    const heatmapLayerRef = useRef<{
+        setData: (data: { max: number; data: Array<{ lat: number; lng: number; value: number }> }) => void;
+        cfg: { radius: number };
+    } | null>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
     // const logoControlRef = useRef<L.Control | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -89,16 +92,6 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
         }
     }), []);
 
-    // Process coordinates with interpolation
-    const processedActivityData = useMemo(() => {
-        if (activityData.length === 0) return [];
-        
-        // Convert activityData to coordinates format for processing
-        const coords: [number, number][] = activityData.map(point => [point.lat, point.lng]);
-        const result = processCoordinates(coords, interpolationInterval);
-        return result.activityData;
-    }, [activityData, interpolationInterval]);
-
     // Calculate field corners using the map's container point conversion
     const fieldCorners = useMemo(() => {
         if (!mapRef.current) {
@@ -119,18 +112,6 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
             return null;
         }
     }, [pitchSize, pitchX, pitchY, rotation, mapView]); // Added mapView to dependencies
-
-    // Filter activity data based on field boundaries and overflow setting
-    const filteredActivityData = useMemo(() => {
-        return filterPointsInField(processedActivityData, fieldCorners, showOverflow);
-    }, [processedActivityData, fieldCorners, showOverflow]);
-
-    // Update field boundary in store
-    useEffect(() => {
-        if (fieldCorners) {
-            setFieldBoundary(fieldCorners);
-        }
-    }, [fieldCorners, setFieldBoundary]);
 
     // Track map view changes
     useEffect(() => {
@@ -185,29 +166,6 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                 valueField: 'value'
             }).addTo(mapRef.current);
 
-            // Add logo control to bottom right corner
-            // const LogoControl = L.Control.extend({
-            //     onAdd: function() {
-            //         const container = L.DomUtil.create('div', 'leaflet-control-logo');
-            //         container.innerHTML = '<span class="text-4xl font-bold">JogaFlo</span>';
-                    
-            //         // Apply gradient to the span element
-            //         const span = container.querySelector('span');
-            //         if (span) {
-            //             span.style.cssText = `
-                            
-            //                 color: #ea5e2a;
-        
-            //             `;
-            //         }
-                    
-            //         return container;
-            //     }
-            // });
-            
-            // logoControlRef.current = new LogoControl({ position: 'topright' });
-            // logoControlRef.current.addTo(mapRef.current);
-
             // Test the container point conversion
             setTimeout(() => {
                 if (mapRef.current) {
@@ -222,10 +180,6 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
 
         return () => {
             if (mapRef.current) {
-                // if (logoControlRef.current) {
-                //     logoControlRef.current.remove();
-                //     logoControlRef.current = null;
-                // }
                 mapRef.current.remove();
                 mapRef.current = null;
             }
@@ -253,7 +207,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
     useEffect(() => {
         let active = true;
 
-        // Recalculate processedActivityData and filteredActivityData here
+        // Recalculate filteredActivityData here
         const coords: [number, number][] = activityData.map(point => [point.lat, point.lng]);
         const { activityData: processed } = processCoordinates(coords, interpolationInterval);
         const filtered = filterPointsInField(processed, fieldCorners, showOverflow);
@@ -272,9 +226,8 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                     });
                 }
                 heatmapLayerRef.current.cfg.radius = radius;
-            } catch (error) {
-                console.error("Error updating heatmap layer:");
-                
+            } catch {
+                console.error("Error updating heatmap layer");
             }
         }
         return () => {
@@ -342,5 +295,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
         </div>
     );
 });
+
+LeafletMap.displayName = 'LeafletMap';
 
 export default LeafletMap;

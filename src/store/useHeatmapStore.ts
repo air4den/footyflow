@@ -32,11 +32,8 @@ interface HeatmapStore {
     showFieldOverlay: boolean;
     setShowFieldOverlay: (show: boolean) => void;
 
-    fieldBoundary: { lat: number; lng: number }[] | null;
-    setFieldBoundary: (boundary: { lat: number; lng: number }[] | null) => void;
-
-    activityData: any[];
-    setActivityData: (data: any[]) => void;
+    activityData: { lat: number; lng: number }[];
+    setActivityData: (data: { lat: number; lng: number }[]) => void;
 
     center: { lat: number, lon: number } | null;
     setCenter: (center: { lat: number, lon: number } | null) => void;
@@ -49,7 +46,7 @@ const localStorageWrapper = {
         const item = localStorage.getItem(name);
         return item ? JSON.parse(item) : null;
     },
-    setItem: (name: string, value: any) => {
+    setItem: (name: string, value: unknown) => {
         localStorage.setItem(name, JSON.stringify(value));
     },
     removeItem: (name: string) => {
@@ -70,7 +67,6 @@ export const useHeatmapStore = create<HeatmapStore>()(
             interpolationInterval: 1.5,
             showOverflow: false,
             showFieldOverlay: false,
-            fieldBoundary: null,
             activityData: [],
             center: null,
             setSelectedActivityId: (id: string) => set({ selectedActivityId: id }),
@@ -83,8 +79,7 @@ export const useHeatmapStore = create<HeatmapStore>()(
             setInterpolationInterval: (interval: number) => set({ interpolationInterval: interval }),
             setShowOverflow: (show: boolean) => set({ showOverflow: show }),
             setShowFieldOverlay: (show: boolean) => set({ showFieldOverlay: show }),
-            setFieldBoundary: (boundary: { lat: number; lng: number }[] | null) => set({ fieldBoundary: boundary }),
-            setActivityData: (data: any[]) => set({ activityData: data }),
+            setActivityData: (data: { lat: number; lng: number }[]) => set({ activityData: data }),
             setCenter: (center: { lat: number, lon: number } | null) => set({ center }),
             reset: () => set({
                 selectedActivityId: "",
@@ -92,7 +87,6 @@ export const useHeatmapStore = create<HeatmapStore>()(
                 rotation: 0,
                 center: null,
                 activityData: [],
-                fieldBoundary: null,
             }),
         }),
         {

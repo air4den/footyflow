@@ -68,18 +68,6 @@ export function processCoordinates(
 } 
 
 // Function to calculate the four corners of the field in lat/lon coordinates
-export function calculateFieldCorners(
-    center: { lat: number; lon: number },
-    pitchSize: number,
-    pitchX: number,
-    pitchY: number,
-    rotation: number,
-    mapBounds?: { north: number; south: number; east: number; west: number }
-): { lat: number; lng: number }[] {
-    // This function will be called from the component where we have access to the map instance
-    // For now, return a placeholder - the actual calculation will be done in the component
-    return [];
-}
 
 // Function to calculate field corners using the map's container point conversion
 export function calculateFieldCornersFromMap(

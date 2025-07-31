@@ -8,7 +8,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getServerSession(authOptions) as any;
+  const session = await getServerSession(authOptions) as { user: { id: string } } | null;
   if (!session) return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
 
   const { id } = await params;

@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import { useSession } from "next-auth/react"
-import { authOptions } from "../api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { Button } from "@radix-ui/themes";
 import Editor from "./Editor";
@@ -40,11 +39,6 @@ export default function EditPage() {
     const handleBack = () => {
         setSelectedActivityId("");
         redirect("/create");
-    };
-
-    const handleSaveHeatmap = () => {
-        // save heatmap as image
-        console.log("Saving heatmap");
     };
 
     return (

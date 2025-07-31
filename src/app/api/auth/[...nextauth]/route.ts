@@ -9,7 +9,11 @@ function normalizeStravaAvatar(raw?: string | null)
   return raw;                          
 }
 
-async function refreshAccessTooken(account: any): Promise<any> {
+async function refreshAccessTooken(account: { id: string; refresh_token: string | null }): Promise<{
+    access_token: string;
+    expires_at: number;
+    refresh_token?: string;
+}> {
     try {
         const url = `https://www.strava.com/oauth/token?`
         const params = new URLSearchParams({

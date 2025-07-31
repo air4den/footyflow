@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import { useSession } from "next-auth/react"
-import { authOptions } from "../api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
 import { Button } from "@radix-ui/themes";
 
@@ -12,7 +11,12 @@ export default function CreatePage() {
     if (!session || !session.user) {
         redirect("/api/auth/signin");
     }
-    const [activities, setActivities] = useState<any[]>([]);
+    const [activities, setActivities] = useState<Array<{
+        id: string;
+        name: string;
+        start_date_local: string;
+        timezone: string;
+    }>>([]);
     const [tempActivityId, setTempActivityId] = useState<string>("");
     const { setSelectedActivityId } = useHeatmapStore();
 

@@ -1,5 +1,6 @@
 "use client"; 
 import { Button } from "@radix-ui/themes";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -38,7 +39,7 @@ export default function Home() {
               </p>
             </div>
             <div className="w-full max-w-96 bg-gray-200 rounded-lg flex items-center justify-center shadow-lg">
-              <img src="/step1.jpg" alt="Step 1" className="w-full h-full object-cover rounded-lg" />
+              <Image src="/step1.jpg" alt="Step 1" width={400} height={300} className="w-full h-full object-cover rounded-lg" />
             </div>
           </div>
           
@@ -52,7 +53,7 @@ export default function Home() {
                 <h4 className="text-2xl font-bold text-center">Sign in to JogaFlo</h4>
               </div>
               <p className="text-lg text-gray-700 leading-relaxed text-center">
-                Click the orange "Sign In" button in the top right corner to sign in to JogaFlo with your Strava account.
+                Click the orange &quot;Sign In&quot; button in the top right corner to sign in to JogaFlo with your Strava account.
               </p>
             </div>
           </div>
@@ -67,11 +68,11 @@ export default function Home() {
                 <h4 className="text-2xl font-bold text-center">Create a New Heatmap</h4>
               </div>
               <p className="text-lg text-gray-700 leading-relaxed text-center">
-                Select the activity you want to use and click "Create Heatmap".
+                Select the activity you want to use and click &quot;Create Heatmap&quot;.
               </p>
             </div>
             <div className="w-full max-w-96 bg-gray-200 rounded-lg flex items-center justify-center shadow-lg">
-              <img src="/step3.png" alt="Step 3" className="w-full h-full object-cover rounded-lg" />
+              <Image src="/step3.png" alt="Step 3" width={400} height={300} className="w-full h-full object-cover rounded-lg" />
             </div>
           </div>
 
@@ -95,7 +96,7 @@ export default function Home() {
               </ul>
             </div>
             <div className="w-auto max-w-2xl bg-gray-200 rounded-lg flex items-center justify-center shadow-lg">
-              <img src="/step4.png" alt="Step 4" className="w-full h-full object-cover rounded-lg" />
+              <Image src="/step4.png" alt="Step 4" width={400} height={300} className="w-full h-full object-cover rounded-lg" />
             </div>
           </div>
 
@@ -109,11 +110,11 @@ export default function Home() {
                 <h4 className="text-2xl font-bold text-center">Save Heatmap</h4>
               </div>
               <p className="text-lg text-gray-700 leading-relaxed text-center">
-                Click "Capture Heatmap" to save the heatmap as a png image.
+                Click &quot;Capture Heatmap&quot; to save the heatmap as a png image.
               </p>
             </div>
             <div className="h-24 max-h-24 bg-gray-200 rounded-lg flex items-center justify-center shadow-lg">
-              <img src="/step5.png" alt="Step 5" className="w-full h-full object-cover rounded-lg" />
+              <Image src="/step5.png" alt="Step 5" width={400} height={50} className="w-full rounded-lg" />
             </div>
           </div>
           
