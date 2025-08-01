@@ -49,17 +49,17 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
             const container = mapContainerRef.current;
             const { width, height } = container.getBoundingClientRect();
             
-            // Calculate dimensions for 4:5 aspect ratio
-            const aspectRatio = 4/5; // width:height ratio
+            // Calculate dimensions for 4:5 aspect ratio (width:height)
+            const aspectRatio = 4/5;
             
-            // Determine the shortest side and calculate the other dimension
+            // Determine the smaller dimension and calculate the other dimension
             let captureWidth, captureHeight;
-            if (width < height) {
-                // Width is shorter, use it as the constraint
+            if (width / aspectRatio <= height) {
+                // Width is the limiting factor
                 captureWidth = width;
                 captureHeight = width / aspectRatio;
             } else {
-                // Height is shorter, use it as the constraint
+                // Height is the limiting factor
                 captureHeight = height;
                 captureWidth = height * aspectRatio;
             }
