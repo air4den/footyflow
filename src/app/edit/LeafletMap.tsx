@@ -7,6 +7,21 @@ import HeatmapOverlay from "heatmap.js/plugins/leaflet-heatmap";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import { processCoordinates, calculateFieldCornersFromMap, filterPointsInField } from "@/lib/coordinates";
 
+// Pre-load html2canvas to avoid chunk loading issues
+let html2canvas: typeof import('html2canvas').default | null = null;
+const loadHtml2Canvas = async () => {
+    if (!html2canvas) {
+        try {
+            const html2canvasModule = await import('html2canvas');
+            html2canvas = html2canvasModule.default;
+        } catch (error) {
+            console.error('Failed to load html2canvas:', error);
+            throw new Error('Failed to load html2canvas library');
+        }
+    }
+    return html2canvas;
+};
+
 export interface LeafletMapRef {
     captureHeatmap: () => Promise<string>;
 }
@@ -60,15 +75,15 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
             }
 
             try {
-                // Dynamically import html2canvas
-                const html2canvas = (await import('html2canvas')).default;
+                // Use pre-loaded html2canvas
+                const html2canvasModule = await loadHtml2Canvas();
                 
                 // Calculate the center position for capture
                 const captureX = (width - captureWidth) / 2; // Center horizontally
                 const captureY = (height - captureHeight) / 2; // Center vertically
                 
                 // Capture the entire map container including overlays
-                const canvasResult = await html2canvas(container.parentElement!, {
+                const canvasResult = await html2canvasModule(container.parentElement!, {
                     width: width,
                     height: height,
                     useCORS: true,
@@ -138,7 +153,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                 mapRef.current.off('move', updateMapView);
             }
         };
-    }, [mapRef.current]);
+    }, []); // Removed mapRef.current dependency
 
     // Initialize Leaflet Map, Heatmap, and Logo
     useEffect(() => {
@@ -157,7 +172,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
             }).addTo(mapRef.current);
 
             heatmapLayerRef.current = new HeatmapOverlay({
-        radius: radius,
+                radius: radius,
                 maxOpacity: 0.8,
                 scaleRadius: true,
                 useLocalExtrema: false,
@@ -184,7 +199,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                 mapRef.current = null;
             }
         };
-    }, [center]);
+    }, [center, radius, tileType]); // Added missing dependencies
 
     // Update tile layer when tileType changes
     useEffect(() => {
@@ -233,7 +248,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
         return () => {
             active = false;
         };
-    }, [activityData, interpolationInterval, fieldCorners ? JSON.stringify(fieldCorners) : "", showOverflow, radius]);
+    }, [activityData, interpolationInterval, fieldCorners, showOverflow, radius]); // Fixed dependency array
 
     // Don't render the map div until center is updated
     if (!center) {
