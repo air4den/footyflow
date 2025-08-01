@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
-
+// import Head from "next/head";
 import { getServerSession } from "next-auth";
 import SessionProvider from "@/components/SessionProvider";
 import NavMenu from "@/components/NavMenu";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+
 export const metadata: Metadata = {
   title: "JogaFlo",
   description: "Convert Strava activities into football heatmaps. ",
