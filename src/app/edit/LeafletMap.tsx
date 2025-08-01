@@ -1,111 +1,114 @@
 "use client";
 
-import { useEffect, useRef, useMemo, useState, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import HeatmapOverlay from "heatmap.js/plugins/leaflet-heatmap";
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import { processCoordinates, calculateFieldCornersFromMap, filterPointsInField } from "@/lib/coordinates";
+import html2canvas from "html2canvas";
 
-// Pre-load html2canvas to avoid chunk loading issues
-let html2canvas: typeof import('html2canvas').default | null = null;
-const loadHtml2Canvas = async () => {
-    if (!html2canvas) {
-        try {
-            const html2canvasModule = await import('html2canvas');
-            html2canvas = html2canvasModule.default;
-        } catch (error) {
-            console.error('Failed to load html2canvas:', error);
-            throw new Error('Failed to load html2canvas library');
-        }
-    }
-    return html2canvas;
-};
-
-export interface LeafletMapRef {
-    captureHeatmap: () => Promise<string>;
-}
-
-const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
-    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, showFieldOverlay } = useHeatmapStore();
+const LeafletMap = () => {
+    const { radius, rotation, activityData, interpolationInterval, center, pitchSize, pitchX, pitchY, tileType, showOverflow, showFieldOverlay, captureRequested, clearCaptureRequest } = useHeatmapStore();
     const mapRef = useRef<L.Map | null>(null);
     const heatmapLayerRef = useRef<{
         setData: (data: { max: number; data: Array<{ lat: number; lng: number; value: number }> }) => void;
         cfg: { radius: number };
     } | null>(null);
     const tileLayerRef = useRef<L.TileLayer | null>(null);
-    // const logoControlRef = useRef<L.Control | null>(null);
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const [mapView, setMapView] = useState<{ center: L.LatLng; zoom: number } | null>(null);
 
-    // Expose capture function to parent component
-    useImperativeHandle(ref, () => ({
-        captureHeatmap: async () => {
-            if (!mapContainerRef.current) {
-                throw new Error("Map container not found");
-            }
-
-            // Get the map container dimensions
-            const container = mapContainerRef.current;
-            const { width, height } = container.getBoundingClientRect();
-            
-            // Calculate dimensions for 4:5 aspect ratio
-            const aspectRatio = 4/5; // width:height ratio
-            
-            // Determine the shortest side and calculate the other dimension
-            let captureWidth, captureHeight;
-            if (width < height) {
-                // Width is shorter, use it as the constraint
-                captureWidth = width;
-                captureHeight = width / aspectRatio;
-            } else {
-                // Height is shorter, use it as the constraint
-                captureHeight = height;
-                captureWidth = height * aspectRatio;
-            }
-            
-            // Create a canvas with 4:5 aspect ratio
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = captureWidth;
-            canvas.height = captureHeight;
-
-            if (!ctx) {
-                throw new Error("Could not get canvas context");
-            }
-
-            try {
-                // Use pre-loaded html2canvas
-                const html2canvasModule = await loadHtml2Canvas();
-                
-                // Calculate the center position for capture
-                const captureX = (width - captureWidth) / 2; // Center horizontally
-                const captureY = (height - captureHeight) / 2; // Center vertically
-                
-                // Capture the entire map container including overlays
-                const canvasResult = await html2canvasModule(container.parentElement!, {
-                    width: width,
-                    height: height,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: null,
-                    scale: 1,
-                    logging: false,
-                    removeContainer: true
-                });
-                
-                // Draw only the centered portion to create the 4:5 aspect ratio
-                ctx.drawImage(canvasResult, captureX, captureY, captureWidth, captureHeight, 0, 0, captureWidth, captureHeight);
-
-                // Convert to data URL
-                const dataUrl = canvas.toDataURL('image/png');
-                return dataUrl;
-            } catch (error) {
-                console.error('Capture error:', error);
-                throw new Error('Failed to capture heatmap');
-            }
+    // Capture function
+    const captureHeatmap = async () => {
+        if (!mapContainerRef.current) {
+            throw new Error("Map container not found");
         }
-    }), []);
+
+        // Get the map container dimensions
+        const container = mapContainerRef.current;
+        const { width, height } = container.getBoundingClientRect();
+        
+        // Calculate dimensions for 4:5 aspect ratio
+        const aspectRatio = 4/5; // width:height ratio
+        
+        // Determine the shortest side and calculate the other dimension
+        let captureWidth, captureHeight;
+        if (width < height) {
+            // Width is shorter, use it as the constraint
+            captureWidth = width;
+            captureHeight = width / aspectRatio;
+        } else {
+            // Height is shorter, use it as the constraint
+            captureHeight = height;
+            captureWidth = height * aspectRatio;
+        }
+        
+        // Create a canvas with 4:5 aspect ratio
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = captureWidth;
+        canvas.height = captureHeight;
+
+        if (!ctx) {
+            throw new Error("Could not get canvas context");
+        }
+
+        try {
+            // Calculate the center position for capture
+            const captureX = (width - captureWidth) / 2; // Center horizontally
+            const captureY = (height - captureHeight) / 2; // Center vertically
+            
+            // Capture the entire map container including overlays
+            const canvasResult = await html2canvas(container.parentElement!, {
+                width: width,
+                height: height,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: null,
+                scale: 1,
+                logging: false,
+                removeContainer: true
+            });
+            
+            // Draw only the centered portion to create the 4:5 aspect ratio
+            ctx.drawImage(canvasResult, captureX, captureY, captureWidth, captureHeight, 0, 0, captureWidth, captureHeight);
+
+            // Convert to data URL
+            const dataUrl = canvas.toDataURL('image/png');
+            return dataUrl;
+        } catch (error) {
+            console.error('Capture error:', error);
+            throw new Error('Failed to capture heatmap');
+        }
+    };
+
+    // Handle capture requests from store
+    useEffect(() => {
+        if (captureRequested) {
+            captureHeatmap().then((dataUrl) => {
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'heatmap.png';
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                clearCaptureRequest();
+            }).catch((error) => {
+                console.error('Error capturing heatmap:', error);
+                alert('Failed to capture heatmap. Please try again.');
+                clearCaptureRequest();
+            });
+        }
+        
+        // Cleanup function to clear capture request if component unmounts
+        return () => {
+            if (captureRequested) {
+                clearCaptureRequest();
+            }
+        };
+    }, [captureRequested, clearCaptureRequest]);
 
     // Calculate field corners using the map's container point conversion
     const fieldCorners = useMemo(() => {
@@ -309,7 +312,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
             )}
         </div>
     );
-});
+};
 
 LeafletMap.displayName = 'LeafletMap';
 

@@ -9,8 +9,11 @@ const nextConfig: NextConfig = {
       config.externals.push('@prisma/client');
       config.plugins = [...config.plugins, new PrismaPlugin()];
     }
+    
     return config;
   },
+  // Always include html2canvas in the bundle
+  transpilePackages: ['html2canvas'],
 };
 
 export default nextConfig;

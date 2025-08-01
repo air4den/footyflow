@@ -2,41 +2,48 @@
 
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import dynamic from 'next/dynamic';
-import { useRef } from 'react';
 import EditSlider from "./EditSlider";
 import { Button } from "@radix-ui/themes";
-import { LeafletMapRef } from "./LeafletMap";
+import { useState, useEffect } from "react";
 
 const LeafletMap = dynamic(() => import('./LeafletMap'), {ssr: false}); 
 
-export default function Editor() {
-    const { rotation, setRotation, radius, setRadius, pitchSize, setPitchSize, pitchX, setPitchX, pitchY, setPitchY, tileType, setTileType, interpolationInterval, setInterpolationInterval, showOverflow, setShowOverflow, showFieldOverlay, setShowFieldOverlay } = useHeatmapStore();
-    const mapRef = useRef<LeafletMapRef>(null);
+// Custom hook to detect mobile devices
+const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
 
-    const handleCapture = async () => {
-        try {
-            if (mapRef.current) {
-                const dataUrl = await mapRef.current.captureHeatmap();
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.download = 'heatmap.png';
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        } catch (error) {
-            console.error('Error capturing heatmap:', error);
-            alert('Failed to capture heatmap. Please try again.');
-        }
+    useEffect(() => {
+        const checkIsMobile = () => {
+            const userAgent = navigator.userAgent || navigator.vendor;
+            const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+            const isMobileDevice = mobileRegex.test(userAgent);
+            const isSmallScreen = window.innerWidth <= 768;
+            
+            setIsMobile(isMobileDevice || isSmallScreen);
+        };
+
+        checkIsMobile();
+        window.addEventListener('resize', checkIsMobile);
+        
+        return () => window.removeEventListener('resize', checkIsMobile);
+    }, []);
+
+    return isMobile;
+};
+
+export default function Editor() {
+    const { rotation, setRotation, radius, setRadius, pitchSize, setPitchSize, pitchX, setPitchX, pitchY, setPitchY, tileType, setTileType, interpolationInterval, setInterpolationInterval, showOverflow, setShowOverflow, showFieldOverlay, setShowFieldOverlay, requestCapture } = useHeatmapStore();
+    const isMobile = useIsMobile();
+
+    const handleCapture = () => {
+        requestCapture();
     };
 
     return (
         <>
         <div className="flex flex-col lg:flex-row items-center justify-center w-full">
             <div className="flex justify-center w-full">
-                <LeafletMap ref={mapRef} />
+                <LeafletMap />
             </div>
             <div className="flex flex-col items-center justify-center gap-4 mt-4 w-full">
                 <div className="flex items-center justify-center gap-4 w-full">
@@ -122,13 +129,15 @@ export default function Editor() {
                         <h1 className="text-1xl text-strorange font-bold text-left w-12">{radius}</h1>
                     </div>
                 </div>
-                <Button
-                className="px-4 py-2 rounded-md bg-gradient-to-br from-strorange to-purple-400 text-white font-medium hover:opacity-80"
-                style={{ cursor: 'pointer' }}
-                onClick={handleCapture}
-                >
-                    Capture Heatmap
-                </Button>
+                {!isMobile && (
+                    <Button
+                    className="px-4 py-2 rounded-md bg-gradient-to-br from-strorange to-purple-400 text-white font-medium hover:opacity-80"
+                    style={{ cursor: 'pointer' }}
+                    onClick={handleCapture}
+                    >
+                        Capture Heatmap
+                    </Button>
+                )}
             </div>
         </div>
         </>
