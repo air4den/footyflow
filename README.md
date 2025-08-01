@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# JogaFlo ⚽🔥🗺️
+
+**Convert your Strava activities into professional football heatmaps**
+
+[jogaflo.joshforden.com](https://jogaflo.joshforden.com)
+
+## About
+
+JogaFlo is a web application that transforms your Strava tracking data into professional-style football heatmaps, similar to those used in professional soccer match analysis. 
+
+![](public/hero.png)
+![](public/step4.png)
+
+## Tech Stack 💻
+
+- **Frontend**: Next.js, React, TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: MongoDB Atlas with Prisma ORM
+- **Authentication**: NextAuth.js with Strava OAuth (session, not JWT)
+- **Visualization**: heatmap.js
+- **Deployment**: Vercel
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18+ 
+- npm, yarn, or pnpm
+- MongoDB database
+- Strava API credentials
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Local Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone the repository**
+   
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. **Set up environment variables**
+   Create a `.env.local` file in the root directory:
+   ```env
+   # Database
+   DATABASE_URL="your-mongodb-connection-string"
+   
+   # NextAuth
+   NEXTAUTH_SECRET="your-nextauth-secret"
+   NEXTAUTH_URL="http://localhost:3000"
+   
+   # Strava OAuth
+   STRAVA_CLIENT_ID="your-strava-client-id"
+   STRAVA_CLIENT_SECRET="your-strava-client-secret"
+   ```
 
-## Learn More
+4. **Set up the database**
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+5. **Run the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Usage
 
-## Deploy on Vercel
+1. **Connect your Strava account** - Sign In with your Strava account to authorize JogaFlo to access your activities
+2. **Select an activity** - Choose from your recent Strava activities
+3. **Edit heatmap** - configure the map tile style, field lines overlay position, and heatmap parameters
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `POST /api/auth/[...nextauth]` - NextAuth.js authentication endpoints
+- `GET /api/activities` - Fetch user's Strava activities
+- `POST /api/heatmap` - Fetch activity's raw tracking data
+
+## Support
+
+This project served as a learning experience in full stack web development for me. If you have any comments, questions, or concerns, please reach out. I am always looking for feedback. 🧡
