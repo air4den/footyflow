@@ -115,8 +115,6 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
         }
         
         console.log("Calculating field corners with map:", mapRef.current);
-        console.log("Field settings:", { pitchSize, pitchX, pitchY, rotation });
-        console.log("Map view:", mapView);
         
         try {
             const corners = calculateFieldCornersFromMap(mapRef.current, pitchSize, pitchX, pitchY, rotation);
@@ -126,7 +124,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
             console.error("Error calculating field corners:", error);
             return null;
         }
-    }, [pitchSize, pitchX, pitchY, rotation, mapView]); // Added mapView to dependencies
+    }, [pitchSize, pitchX, pitchY, rotation, mapView]);
 
     // Track map view changes
     useEffect(() => {
@@ -153,7 +151,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                 mapRef.current.off('move', updateMapView);
             }
         };
-    }, []); // Removed mapRef.current dependency
+    }, [mapRef.current]); // this dependency triggers a rerender of mapview, which triggers a rerender of fieldCorners...necessary to refileter the points when moving the map
 
     // Initialize Leaflet Map, Heatmap, and Logo
     useEffect(() => {
@@ -235,12 +233,12 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                         data: filtered.map(point => ({ ...point, value: 1 }))
                     });
                 } else {
+                    // no points after filtering
                     heatmapLayerRef.current.setData({
                         max: 1,
                         data: []
                     });
                 }
-                heatmapLayerRef.current.cfg.radius = radius;
             } catch {
                 console.error("Error updating heatmap layer");
             }
