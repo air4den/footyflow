@@ -199,7 +199,7 @@ const LeafletMap = forwardRef<LeafletMapRef>((props, ref) => {
                 mapRef.current = null;
             }
         };
-    }, [center, radius, tileType]); // Added missing dependencies
+    }, [center, tileType]); // Removed radius from dependencies
 
     // Update tile layer when tileType changes
     useEffect(() => {
