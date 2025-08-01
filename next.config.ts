@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
       config.externals.push('@prisma/client');
       config.plugins = [...config.plugins, new PrismaPlugin()];
     }
+    
+    // Ensure html2canvas is properly bundled for production
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    
     return config;
   },
 };

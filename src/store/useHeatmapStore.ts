@@ -38,6 +38,11 @@ interface HeatmapStore {
     center: { lat: number, lon: number } | null;
     setCenter: (center: { lat: number, lon: number } | null) => void;
 
+    // Capture functionality
+    captureRequested: boolean;
+    requestCapture: () => void;
+    clearCaptureRequest: () => void;
+
     reset: () => void;
 }
 
@@ -69,6 +74,7 @@ export const useHeatmapStore = create<HeatmapStore>()(
             showFieldOverlay: false,
             activityData: [],
             center: null,
+            captureRequested: false,
             setSelectedActivityId: (id: string) => set({ selectedActivityId: id }),
             setRadius: (radius: number) => set({ radius }),
             setRotation: (rotation: number) => set({ rotation }),
@@ -81,12 +87,15 @@ export const useHeatmapStore = create<HeatmapStore>()(
             setShowFieldOverlay: (show: boolean) => set({ showFieldOverlay: show }),
             setActivityData: (data: { lat: number; lng: number }[]) => set({ activityData: data }),
             setCenter: (center: { lat: number, lon: number } | null) => set({ center }),
+            requestCapture: () => set({ captureRequested: true }),
+            clearCaptureRequest: () => set({ captureRequested: false }),
             reset: () => set({
                 selectedActivityId: "",
                 radius: 0.000125,
                 rotation: 0,
                 center: null,
                 activityData: [],
+                captureRequested: false,
             }),
         }),
         {

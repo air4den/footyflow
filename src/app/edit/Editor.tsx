@@ -2,41 +2,23 @@
 
 import { useHeatmapStore } from "@/store/useHeatmapStore";
 import dynamic from 'next/dynamic';
-import { useRef } from 'react';
 import EditSlider from "./EditSlider";
 import { Button } from "@radix-ui/themes";
-import { LeafletMapRef } from "./LeafletMap";
 
 const LeafletMap = dynamic(() => import('./LeafletMap'), {ssr: false}); 
 
 export default function Editor() {
-    const { rotation, setRotation, radius, setRadius, pitchSize, setPitchSize, pitchX, setPitchX, pitchY, setPitchY, tileType, setTileType, interpolationInterval, setInterpolationInterval, showOverflow, setShowOverflow, showFieldOverlay, setShowFieldOverlay } = useHeatmapStore();
-    const mapRef = useRef<LeafletMapRef>(null);
+    const { rotation, setRotation, radius, setRadius, pitchSize, setPitchSize, pitchX, setPitchX, pitchY, setPitchY, tileType, setTileType, interpolationInterval, setInterpolationInterval, showOverflow, setShowOverflow, showFieldOverlay, setShowFieldOverlay, requestCapture } = useHeatmapStore();
 
-    const handleCapture = async () => {
-        try {
-            if (mapRef.current) {
-                const dataUrl = await mapRef.current.captureHeatmap();
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.download = 'heatmap.png';
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        } catch (error) {
-            console.error('Error capturing heatmap:', error);
-            alert('Failed to capture heatmap. Please try again.');
-        }
+    const handleCapture = () => {
+        requestCapture();
     };
 
     return (
         <>
         <div className="flex flex-col lg:flex-row items-center justify-center w-full">
             <div className="flex justify-center w-full">
-                <LeafletMap ref={mapRef} />
+                <LeafletMap />
             </div>
             <div className="flex flex-col items-center justify-center gap-4 mt-4 w-full">
                 <div className="flex items-center justify-center gap-4 w-full">
