@@ -156,7 +156,7 @@ const LeafletMap = () => {
                 mapRef.current.off('move', updateMapView);
             }
         };
-    }, [mapRef.current]);
+    }, []); // Removed mapRef.current dependency
 
     // Initialize Leaflet Map, Heatmap, and Logo
     useEffect(() => {
@@ -175,7 +175,7 @@ const LeafletMap = () => {
             }).addTo(mapRef.current);
 
             heatmapLayerRef.current = new HeatmapOverlay({
-        radius: radius,
+                radius: radius,
                 maxOpacity: 0.8,
                 scaleRadius: true,
                 useLocalExtrema: false,
@@ -202,7 +202,7 @@ const LeafletMap = () => {
                 mapRef.current = null;
             }
         };
-    }, [center]);
+    }, [center, radius, tileType]); // Added missing dependencies
 
     // Update tile layer when tileType changes
     useEffect(() => {
@@ -251,7 +251,7 @@ const LeafletMap = () => {
         return () => {
             active = false;
         };
-    }, [activityData, interpolationInterval, fieldCorners ? JSON.stringify(fieldCorners) : "", showOverflow, radius]);
+    }, [activityData, interpolationInterval, fieldCorners, showOverflow, radius]); // Fixed dependency array
 
     // Don't render the map div until center is updated
     if (!center) {
