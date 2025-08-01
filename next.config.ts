@@ -8,17 +8,34 @@ const nextConfig: NextConfig = {
     if (isServer) {
       config.externals.push('@prisma/client');
       config.plugins = [...config.plugins, new PrismaPlugin()];
+    } else {
+      // Client-side configuration for html2canvas
+      // Ensure html2canvas is bundled for mobile
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        canvas: false,
+        'canvas-prebuilt': false,
+      };
+      
+      // Ensure html2canvas is not externalized on client
+      if (config.externals) {
+        config.externals = config.externals.filter((external: any) => {
+          if (typeof external === 'function') {
+            return true; // Keep function externals
+          }
+          return !external.html2canvas; // Remove html2canvas from externals
+        });
+      }
     }
     
-    // Ensure html2canvas is properly bundled for production
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    };
-    
     return config;
+  },
+  // Ensure html2canvas is included in the bundle
+  experimental: {
+    optimizePackageImports: ['html2canvas'],
   },
 };
 

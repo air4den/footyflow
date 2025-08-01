@@ -101,6 +101,13 @@ const LeafletMap = () => {
                 clearCaptureRequest();
             });
         }
+        
+        // Cleanup function to clear capture request if component unmounts
+        return () => {
+            if (captureRequested) {
+                clearCaptureRequest();
+            }
+        };
     }, [captureRequested, clearCaptureRequest]);
 
     // Calculate field corners using the map's container point conversion
